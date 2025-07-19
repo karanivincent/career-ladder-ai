@@ -1,0 +1,46 @@
+{
+  "name": "career-ladder-ai",
+  "version": "1.0.0",
+  "description": "An interactive game where an AI assistant attempts to guess users' professions through creative questioning",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:web & npm run dev:api",
+    "dev:web": "npm run dev -w @career-ladder/web",
+    "dev:api": "npm run dev -w @career-ladder/api",
+    "build": "npm run build:shared && npm run build:web && npm run build:api",
+    "build:shared": "npm run build -w @career-ladder/shared",
+    "build:web": "npm run build -w @career-ladder/web",
+    "build:api": "npm run build -w @career-ladder/api",
+    "test": "npm run test --workspaces --if-present",
+    "test:web": "npm run test -w @career-ladder/web",
+    "test:api": "npm run test -w @career-ladder/api",
+    "test:e2e": "npm run test:e2e -w @career-ladder/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
+    "db:migrate": "npm run db:migrate -w @career-ladder/api",
+    "db:studio": "npm run db:studio -w @career-ladder/api"
+  },
+  "keywords": [
+    "ai",
+    "game",
+    "career",
+    "nextjs",
+    "nestjs",
+    "supabase"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
