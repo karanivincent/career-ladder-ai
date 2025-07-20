@@ -27,7 +27,8 @@ export default function NewGamePage() {
       router.push(`/game/${game.id}`)
     } catch (error) {
       console.error('Failed to create game:', error)
-      alert('Failed to create game. Please try again.')
+      const { showErrorToast } = await import('@/lib/api/error-handler')
+      showErrorToast(error)
       setIsCreating(false)
     }
   }

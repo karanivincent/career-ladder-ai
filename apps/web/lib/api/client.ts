@@ -1,6 +1,8 @@
 import { Game, CreateGameDto, UpdateGameDto, Message } from '@career-ladder/shared';
+import { API_URL } from '@/lib/env';
+import { ApiError, handleApiError } from './error-handler';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = API_URL;
 
 class ApiClient {
   private async request<T>(
@@ -9,20 +11,28 @@ class ApiClient {
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+      });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw new Error(error.message || `Request failed: ${response.status}`);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: response.statusText }));
+        throw new ApiError(
+          error.message || `Request failed: ${response.status}`,
+          response.status,
+          error,
+        );
+      }
+
+      return response.json();
+    } catch (error) {
+      return handleApiError(error);
     }
-
-    return response.json();
   }
 
   // Game endpoints

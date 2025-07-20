@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button'
 import { useState, useEffect } from 'react'
 import { CountdownTimer } from '@/components/game/countdown-timer'
 import { ChatInterface } from '@/components/game/chat-interface'
+import { GameResults } from '@/components/game/game-results'
 import { apiClient } from '@/lib/api/client'
-import { MessageRole } from '@career-ladder/shared'
+import { MessageRole, Game } from '@career-ladder/shared'
 
 interface ChatMessage {
   id: string
@@ -24,7 +25,7 @@ export default function GamePage() {
   const [gameEnded, setGameEnded] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [gameData, setGameData] = useState<any>(null)
+  const [gameData, setGameData] = useState<Game | null>(null)
 
   // Load game data on mount
   useEffect(() => {
@@ -73,7 +74,8 @@ export default function GamePage() {
       }])
     } catch (error) {
       console.error('Failed to start game:', error)
-      alert('Failed to start game. Please try again.')
+      const { showErrorToast } = await import('@/lib/api/error-handler')
+      showErrorToast(error)
     } finally {
       setIsLoading(false)
     }
@@ -84,6 +86,9 @@ export default function GamePage() {
     try {
       // End the game with a timeout
       await apiClient.endGame(gameId, 'Time ran out!', false)
+      // Reload game data to get final results
+      const updatedGame = await apiClient.getGame(gameId)
+      setGameData(updatedGame)
     } catch (error) {
       console.error('Failed to end game:', error)
     }
@@ -119,15 +124,31 @@ export default function GamePage() {
       const gameStatus = await apiClient.getGameStatus(gameId)
       if (gameStatus.status === 'completed') {
         setGameEnded(true)
+        // Reload game data to get final results
+        const updatedGame = await apiClient.getGame(gameId)
+        setGameData(updatedGame)
       }
     } catch (error) {
       console.error('Failed to send message:', error)
       // Remove the optimistic message on error
       setMessages(prev => prev.filter(msg => msg.id !== tempUserMessage.id))
-      alert('Failed to send message. Please try again.')
+      const { showErrorToast } = await import('@/lib/api/error-handler')
+      showErrorToast(error)
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Show results screen when game ends and we have game data
+  if (gameEnded && gameData && gameData.endedAt) {
+    return (
+      <div className="container mx-auto p-4 min-h-screen flex items-center justify-center">
+        <GameResults 
+          game={gameData}
+          onPlayAgain={() => router.push('/game/new')}
+        />
+      </div>
+    )
   }
 
   return (
