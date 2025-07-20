@@ -9,6 +9,8 @@ import { ChatInterface } from '@/components/game/chat-interface'
 import { GameResults } from '@/components/game/game-results'
 import { apiClient } from '@/lib/api/client'
 import { MessageRole, Game } from '@career-ladder/shared'
+import { openAIClient } from '@/lib/openai/client'
+import { OPENAI_API_KEY } from '@/lib/env'
 
 interface ChatMessage {
   id: string
@@ -26,6 +28,14 @@ export default function GamePage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [gameData, setGameData] = useState<Game | null>(null)
+  const [messagesBuffer, setMessagesBuffer] = useState<Array<{ role: string; content: string }>>([])
+
+  // Initialize OpenAI client if API key is available
+  useEffect(() => {
+    if (OPENAI_API_KEY) {
+      openAIClient.initialize(OPENAI_API_KEY)
+    }
+  }, [])
 
   // Load game data on mount
   useEffect(() => {
@@ -123,26 +133,78 @@ export default function GamePage() {
     setIsLoading(true)
     
     try {
-      // Send to backend and get AI response
-      const aiResponse = await apiClient.sendMessage(gameId, content)
-      
-      // Add AI response
-      const aiMessage: ChatMessage = {
-        id: aiResponse.id,
-        role: 'ai',
-        content: aiResponse.content,
-        timestamp: new Date(aiResponse.timestamp)
-      }
-      
-      setMessages(prev => [...prev, aiMessage])
-      
-      // Check if game ended
-      const gameStatus = await apiClient.getGameStatus(gameId)
-      if (gameStatus.status === 'completed') {
-        setGameEnded(true)
-        // Reload game data to get final results
-        const updatedGame = await apiClient.getGame(gameId)
-        setGameData(updatedGame)
+      // Use direct OpenAI if API key is available
+      if (OPENAI_API_KEY) {
+        // Get conversation history for context
+        const conversationHistory = messages.map(msg => ({
+          role: msg.role === 'user' ? 'user' as const : 'assistant' as const,
+          content: msg.content
+        }))
+        
+        // Add the new user message to history
+        conversationHistory.push({ role: 'user', content })
+        
+        // Get time remaining
+        const timeRemaining = await apiClient.getTimeRemaining(gameId)
+        
+        // Generate AI response directly
+        const aiResponseContent = await openAIClient.generateResponse(
+          conversationHistory,
+          timeRemaining.timeRemaining
+        )
+        
+        // Add AI response to UI immediately
+        const aiMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'ai',
+          content: aiResponseContent,
+          timestamp: new Date()
+        }
+        
+        setMessages(prev => [...prev, aiMessage])
+        
+        // Update messages buffer for saving
+        const newBuffer = [
+          ...messagesBuffer,
+          { role: 'user', content },
+          { role: 'assistant', content: aiResponseContent }
+        ]
+        setMessagesBuffer(newBuffer)
+        
+        // Save messages to database asynchronously (don't wait)
+        apiClient.saveMessages(gameId, newBuffer).catch(console.error)
+        
+        // Check if AI made a guess (simplified check)
+        if (aiResponseContent.toLowerCase().includes('i think you') || 
+            aiResponseContent.toLowerCase().includes('my guess is') ||
+            timeRemaining.timeRemaining < 10) {
+          // End game
+          const isCorrect = aiResponseContent.toLowerCase().includes(gameData?.profession.toLowerCase() || '')
+          await apiClient.endGame(gameId, aiResponseContent, isCorrect)
+          setGameEnded(true)
+          const updatedGame = await apiClient.getGame(gameId)
+          setGameData(updatedGame)
+        }
+      } else {
+        // Fallback to backend API
+        const aiResponse = await apiClient.sendMessage(gameId, content)
+        
+        const aiMessage: ChatMessage = {
+          id: aiResponse.id,
+          role: 'ai',
+          content: aiResponse.content,
+          timestamp: new Date(aiResponse.timestamp)
+        }
+        
+        setMessages(prev => [...prev, aiMessage])
+        
+        // Check if game ended
+        const gameStatus = await apiClient.getGameStatus(gameId)
+        if (gameStatus.status === 'completed') {
+          setGameEnded(true)
+          const updatedGame = await apiClient.getGame(gameId)
+          setGameData(updatedGame)
+        }
       }
     } catch (error) {
       console.error('Failed to send message:', error)

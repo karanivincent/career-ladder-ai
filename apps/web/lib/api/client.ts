@@ -85,6 +85,16 @@ class ApiClient {
       body: JSON.stringify({ content }),
     });
   }
+
+  async saveMessages(
+    gameId: string, 
+    messages: Array<{ role: string; content: string }>
+  ): Promise<{ saved: number }> {
+    return this.request<{ saved: number }>(`/chat/${gameId}/messages/save`, {
+      method: 'POST',
+      body: JSON.stringify({ messages }),
+    });
+  }
 }
 
 export const apiClient = new ApiClient();

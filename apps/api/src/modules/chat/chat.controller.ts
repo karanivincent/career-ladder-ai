@@ -42,4 +42,16 @@ export class ChatController {
   ): Promise<Message> {
     return this.chatService.processUserMessage(gameId, body.content);
   }
+
+  @Post(':gameId/messages/save')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Save messages after direct OpenAI interaction' })
+  @ApiResponse({ status: 200, description: 'Messages saved successfully' })
+  async saveMessages(
+    @Param('gameId') gameId: string,
+    @Body() body: { messages: Array<{ role: string; content: string }> },
+  ): Promise<{ saved: number }> {
+    const savedCount = await this.chatService.saveMessages(gameId, body.messages);
+    return { saved: savedCount };
+  }
 }

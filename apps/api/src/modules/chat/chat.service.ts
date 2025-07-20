@@ -127,6 +127,27 @@ export class ChatService {
            normalizedProfession.includes(normalizedGuess);
   }
 
+  async saveMessages(
+    gameId: string, 
+    messages: Array<{ role: string; content: string }>
+  ): Promise<number> {
+    // Verify game exists
+    await this.gameService.findOne(gameId);
+    
+    // Save all messages
+    const savedMessages = await Promise.all(
+      messages.map(msg => 
+        this.createMessage({
+          gameId,
+          role: msg.role === 'user' ? MessageRole.USER : MessageRole.AI,
+          content: msg.content,
+        })
+      )
+    );
+    
+    return savedMessages.length;
+  }
+
   private mapToMessage(message: any): Message {
     return {
       id: message.id,
