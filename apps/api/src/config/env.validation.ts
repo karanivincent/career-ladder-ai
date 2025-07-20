@@ -9,7 +9,7 @@ enum Environment {
 
 export class EnvironmentVariables {
   @IsEnum(Environment)
-  NODE_ENV: Environment;
+  NODE_ENV!: Environment;
 
   @IsNumber()
   @IsOptional()
@@ -18,29 +18,29 @@ export class EnvironmentVariables {
   // Supabase
   @IsUrl()
   @IsNotEmpty()
-  SUPABASE_URL: string;
+  SUPABASE_URL!: string;
 
   @IsString()
   @IsNotEmpty()
-  SUPABASE_ANON_KEY: string;
+  SUPABASE_ANON_KEY!: string;
 
   @IsString()
   @IsNotEmpty()
-  SUPABASE_SERVICE_ROLE_KEY: string;
+  SUPABASE_SERVICE_ROLE_KEY!: string;
 
   // Database
   @IsString()
   @IsNotEmpty()
-  DATABASE_URL: string;
+  DATABASE_URL!: string;
 
   @IsString()
   @IsNotEmpty()
-  DIRECT_URL: string;
+  DIRECT_URL!: string;
 
   // OpenAI
   @IsString()
   @IsNotEmpty()
-  OPENAI_API_KEY: string;
+  OPENAI_API_KEY!: string;
 
   @IsString()
   @IsOptional()
