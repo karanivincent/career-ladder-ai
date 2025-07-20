@@ -62,7 +62,7 @@ export function validate(config: Record<string, unknown>) {
   const errors = validateSync(validatedConfig, { 
     skipMissingProperties: false,
     whitelist: true,
-    forbidNonWhitelisted: true,
+    forbidNonWhitelisted: false,
   });
 
   if (errors.length > 0) {
