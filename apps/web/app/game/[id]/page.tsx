@@ -38,12 +38,24 @@ export default function GamePage() {
           setGameStarted(true)
           // Load existing messages
           const existingMessages = await apiClient.getGameMessages(gameId)
-          setMessages(existingMessages.map(msg => ({
-            id: msg.id,
-            role: msg.role === MessageRole.AI ? 'ai' : 'user',
-            content: msg.content,
-            timestamp: new Date(msg.timestamp)
-          })))
+          
+          // If no messages exist but game has started, get the initial greeting
+          if (existingMessages.length === 0) {
+            const aiGreeting = await apiClient.startChat(gameId)
+            setMessages([{
+              id: aiGreeting.id,
+              role: 'ai',
+              content: aiGreeting.content,
+              timestamp: new Date(aiGreeting.timestamp)
+            }])
+          } else {
+            setMessages(existingMessages.map(msg => ({
+              id: msg.id,
+              role: msg.role === MessageRole.AI ? 'ai' : 'user',
+              content: msg.content,
+              timestamp: new Date(msg.timestamp)
+            })))
+          }
         }
         
         if (game.endedAt) {
@@ -61,11 +73,15 @@ export default function GamePage() {
   const startGame = async () => {
     try {
       setIsLoading(true)
+      
+      // Start the game first
       await apiClient.startGame(gameId)
-      setGameStarted(true)
       
       // Get initial AI greeting
       const aiGreeting = await apiClient.startChat(gameId)
+      
+      // Update state together
+      setGameStarted(true)
       setMessages([{
         id: aiGreeting.id,
         role: 'ai',
@@ -202,6 +218,7 @@ export default function GamePage() {
             onSendMessage={handleSendMessage}
             isLoading={isLoading}
             disabled={!gameStarted || gameEnded}
+            gameStarted={gameStarted}
             className="h-full"
           />
         </div>

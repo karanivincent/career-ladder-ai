@@ -16,6 +16,7 @@ export class GameService {
       data: {
         profession: data.profession,
         isSuccess: false,
+        // Don't set startedAt here - game should start when user clicks start
       },
     });
 

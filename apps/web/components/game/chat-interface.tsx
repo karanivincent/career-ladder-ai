@@ -20,6 +20,7 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => void
   isLoading?: boolean
   disabled?: boolean
+  gameStarted?: boolean
   className?: string
 }
 
@@ -28,6 +29,7 @@ export function ChatInterface({
   onSendMessage, 
   isLoading = false,
   disabled = false,
+  gameStarted = false,
   className 
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('')
@@ -76,7 +78,7 @@ export function ChatInterface({
       <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-muted-foreground">
-            <p>Waiting for the game to start...</p>
+            <p>{gameStarted ? 'Loading conversation...' : 'Click "Start Game" to begin'}</p>
           </div>
         ) : (
           <div className="space-y-4">
