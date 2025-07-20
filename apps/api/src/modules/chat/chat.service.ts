@@ -34,6 +34,27 @@ export class ChatService {
     return messages.map(msg => this.mapToMessage(msg));
   }
 
+  async getInitialMessage(gameId: string): Promise<Message> {
+    // Verify game exists
+    const game = await this.gameService.findOne(gameId);
+    
+    // Check if there are already messages
+    const existingMessages = await this.getGameMessages(gameId);
+    if (existingMessages.length > 0) {
+      return existingMessages[0]; // Return first message if it exists
+    }
+    
+    // Generate initial AI greeting
+    const greeting = "Hello! I'm excited to play Career Ladder with you. I have 2 minutes to guess your profession. Let's start with something simple - how many years have you been working in your current profession?";
+    
+    // Save and return the greeting
+    return this.createMessage({
+      gameId,
+      role: MessageRole.AI,
+      content: greeting,
+    });
+  }
+
   async processUserMessage(gameId: string, content: string): Promise<Message> {
     // Verify game exists and is active
     const game = await this.gameService.findOne(gameId);
@@ -43,19 +64,24 @@ export class ChatService {
       throw new NotFoundException('Game is not active');
     }
 
-    // Save user message
-    const userMessage = await this.createMessage({
-      gameId,
-      role: MessageRole.USER,
-      content,
-    });
+    // Skip saving if this is the initial "Start game" trigger
+    if (content !== 'Start game') {
+      // Save user message
+      await this.createMessage({
+        gameId,
+        role: MessageRole.USER,
+        content,
+      });
+    }
 
     // Get conversation history
     const messages = await this.getGameMessages(gameId);
-    const conversationHistory = messages.map(msg => ({
-      role: msg.role === MessageRole.USER ? 'user' : 'assistant',
-      content: msg.content,
-    }));
+    const conversationHistory = messages
+      .filter(msg => msg.content !== 'Start game') // Filter out trigger messages
+      .map(msg => ({
+        role: msg.role === MessageRole.USER ? 'user' : 'assistant',
+        content: msg.content,
+      }));
 
     // Get time remaining
     const timeRemaining = await this.gameService.getTimeRemaining(gameId);

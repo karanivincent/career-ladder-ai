@@ -23,6 +23,14 @@ export class ChatController {
     return this.chatService.getGameMessages(gameId);
   }
 
+  @Post(':gameId/start')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Get initial AI greeting for a game' })
+  @ApiResponse({ status: 200, description: 'Returns initial AI message' })
+  async startChat(@Param('gameId') gameId: string): Promise<Message> {
+    return this.chatService.getInitialMessage(gameId);
+  }
+
   @Post(':gameId/messages')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send a message in the game' })

@@ -73,6 +73,12 @@ class ApiClient {
     return this.request<Message[]>(`/chat/${gameId}/messages`);
   }
 
+  async startChat(gameId: string): Promise<Message> {
+    return this.request<Message>(`/chat/${gameId}/start`, {
+      method: 'POST',
+    });
+  }
+
   async sendMessage(gameId: string, content: string): Promise<Message> {
     return this.request<Message>(`/chat/${gameId}/messages`, {
       method: 'POST',

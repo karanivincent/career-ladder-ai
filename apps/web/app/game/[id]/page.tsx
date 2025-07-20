@@ -64,13 +64,13 @@ export default function GamePage() {
       await apiClient.startGame(gameId)
       setGameStarted(true)
       
-      // Send initial message to trigger AI response
-      const aiResponse = await apiClient.sendMessage(gameId, 'Start game')
+      // Get initial AI greeting
+      const aiGreeting = await apiClient.startChat(gameId)
       setMessages([{
-        id: aiResponse.id,
+        id: aiGreeting.id,
         role: 'ai',
-        content: aiResponse.content,
-        timestamp: new Date(aiResponse.timestamp)
+        content: aiGreeting.content,
+        timestamp: new Date(aiGreeting.timestamp)
       }])
     } catch (error) {
       console.error('Failed to start game:', error)
