@@ -1,3 +1,6 @@
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
@@ -6,9 +9,11 @@ export default function Home() {
         <p className="text-xl text-muted-foreground mb-8">
           Can AI guess your profession in 2 minutes?
         </p>
-        <button className="bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:opacity-90 transition-opacity">
-          Start Game
-        </button>
+        <Link href="/game/new">
+          <Button size="lg" className="text-lg px-8">
+            Start Game
+          </Button>
+        </Link>
       </div>
     </main>
   )

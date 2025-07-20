@@ -125,6 +125,10 @@ The AI should be:
 - Local API: http://localhost:3001
 - Supabase Studio: http://localhost:54323
 
+## Development Memories
+
+- After a complete feature always commit and push to github
+
 ## Session Summary - Initial Setup (Jan 19, 2025)
 
 ### What We Accomplished
